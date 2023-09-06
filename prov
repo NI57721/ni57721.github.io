@@ -50,7 +50,7 @@ execute_quit() {
 }
 
 execute_edit() {
-  local tmppath=$(dirname $0)/hoge-tmp.sh
+  local tmppath=$(dirname $0)/prov-tmp.sh
   echo -e "EDIT. CHAPTER: $CHAPTER"
   echo -e "$CODE" | tee $tmppath
   vim $tmppath
@@ -84,9 +84,9 @@ instruction() {
     000)
       echo -e "${CLR_WHITE}\
 # 000: Hi, there! Welcome to Arch Linux.
-#      You can stop and resume this programme anytime you like.
+#      You can pause and resume this programme anytime you like.
 #      The indices are required as arguments when you try to resume.
-#      e.g. ${CLR_GREEN}$ hoge 000
+#      e.g. ${CLR_GREEN}$ prov 000
 ${CLR_WHITE}#
 #      In the following steps, your device name is assumed to be /dev/sda.
 #      So here goes!
@@ -116,9 +116,9 @@ ${CLR_RESET}"
       echo -e "${CLR_WHITE}\
 # 004: Create partitions and mount them if you need to do.
 #      Here is the example of a table.
-#        ${CLR_GREEN}/mnt/boot    /dev/sda1    EFI System Partition(EF00) 512MiB${CLR_WHITE}
-#        ${CLR_GREEN}swap         /dev/sda2    Linux Swap Partition(8200) 8GiB${CLR_WHITE}
-#        ${CLR_GREEN}/mnt/storage /dev/sda3    Linux x86-64 root(8304)    1TiB${CLR_WHITE}
+#        ${CLR_GREEN}/mnt/boot    /dev/sda1    EFI system partition(EF00) 512MiB${CLR_WHITE}
+#        ${CLR_GREEN}swap         /dev/sda2    Linux swap(8200)           8GiB${CLR_WHITE}
+#        ${CLR_GREEN}/mnt/storage /dev/sda3    Linux filesystem(8300)     1TiB${CLR_WHITE}
 #        ${CLR_GREEN}/mnt         /dev/sda4    Linux x86-64 root(8304)    Remainder\
 ${CLR_RESET}"
       CODE="gdisk /dev/sda";;
@@ -193,7 +193,7 @@ cat /mnt/etc/fstab\
 # 013: Move this file under /mnt, and then execute chroot.\
 ${CLR_RESET}"
       CODE="\
-mv -i hoge /mnt
+mv -i prov /mnt
 arch-chroot /mnt\
 ";;
 
@@ -209,19 +209,28 @@ ${CLR_RESET}"
       echo -e "${CLR_WHITE}\
 # 101: Welcome back! Let's go!
 
-       Set the time zone to Asia/Tokyo.\
+       Install packages you need.\
 ${CLR_RESET}"
-      CODE="ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime";;
+      CODE="\
+pacman -Syu
+pacman -S base-devel git intel-ucode sudo vim-minimal\
+";;
 
     102)
       echo -e "${CLR_WHITE}\
-# 102: Set the system clock to the hardware one.\
+# 102: Set the time zone to Asia/Tokyo.\
 ${CLR_RESET}"
-      CODE="hwclock --systohc";;
+      CODE="ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime";;
 
     103)
       echo -e "${CLR_WHITE}\
-# 103: Create the locale.\
+# 103: Set the system clock to the hardware one.\
+${CLR_RESET}"
+      CODE="hwclock --systohc";;
+
+    104)
+      echo -e "${CLR_WHITE}\
+# 104: Create the locale.\
 ${CLR_RESET}"
       CODE="\
 echo 'en_US.UTF-8 UTF-8' | tee -a /etc/locale.gen
@@ -229,26 +238,17 @@ echo 'LANG=en_US.UTF-8' > /etc/locale.conf
 locale-gen\
 ";;
 
-    104)
+    105)
       echo -e "${CLR_WHITE}\
-# 104: Set the host name. ${CLR_RED}It is recommended to press 'e'.\
+# 105: Set the host name. ${CLR_RED}It is recommended to press 'e'.\
 ${CLR_RESET}"
       CODE="echo 'MyHostName' > /etc/hostname";;
 
-    105)
-      echo -e "${CLR_WHITE}\
-# 105: Set the password for root.\
-${CLR_RESET}"
-      CODE="passwd";;
-
     106)
       echo -e "${CLR_WHITE}\
-# 106: Install packages you need.\
+# 106: Set the password for root.\
 ${CLR_RESET}"
-      CODE="\
-pacman -Syu
-pacman -S base-devel git intel-ucode sudo vim-minimal\
-";;
+      CODE="passwd";;
 
     107)
       echo -e "${CLR_WHITE}\
