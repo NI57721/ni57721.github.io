@@ -119,8 +119,8 @@ ${CLR_RESET}"
      Here is the example of a table.
        ${CLR_GREEN}/mnt/boot    /dev/sda1    EFI system partition(EF00) 512MiB${CLR_WHITE}
        ${CLR_GREEN}swap         /dev/sda2    Linux swap(8200)           8GiB${CLR_WHITE}
-       ${CLR_GREEN}/mnt/storage /dev/sda3    Linux filesystem(8300)     1TiB${CLR_WHITE}
-       ${CLR_GREEN}/mnt         /dev/sda4    Linux x86-64 root(8304)    Remainder\
+       ${CLR_GREEN}/mnt         /dev/sda3    Linux x86-64 root(8304)    1TiB${CLR_WHITE}
+       ${CLR_GREEN}/mnt/storage /dev/sda4    Linux filesystem(8300)     Remainder\
 ${CLR_RESET}"
       CODE="gdisk /dev/sda";;
 
@@ -135,8 +135,10 @@ ${CLR_RESET}"
 006: Format each partition and make swap.\
 ${CLR_RESET}"
       CODE="\
-mkfs.fat -F 32 /dev/sda1\nmkswap /dev/sda2
-mkfs.ext4 /dev/sda3\nmkfs.ext4 /dev/sda4\
+mkfs.fat -F 32 /dev/sda1
+mkswap /dev/sda2
+mkfs.ext4 /dev/sda3
+mkfs.ext4 /dev/sda4\
 ";;
 
     007)
@@ -144,9 +146,9 @@ mkfs.ext4 /dev/sda3\nmkfs.ext4 /dev/sda4\
 007: Mount each partition.\
 ${CLR_RESET}"
       CODE="\
-mount /dev/sda4 /mnt
+mount /dev/sda3 /mnt
 mount --mkdir /dev/sda1 /mnt/boot
-mount --mkdir /dev/sda3 /mnt/storage
+mount --mkdir /dev/sda4 /mnt/storage
 swapon /dev/sda2\
 ";;
 
@@ -282,7 +284,7 @@ title   Arch Linux
 linux   /vmlinuz-linux
 initrd  /intel-ucode.img
 initrd  /initramfs-linux.img
-options root=$(blkid -o export /dev/sda4 | grep '^UUID=') rw\\
+options root=$(blkid -o export /dev/sda3 | grep '^UUID=') rw\\
 \" | tee /boot/loader/entries/arch.conf\
 ";;
 
@@ -297,7 +299,7 @@ title   Arch Linux (fallback initramfs)
 linux   /vmlinuz-linux
 initrd  /intel-ucode.img
 initrd  /initramfs-linux-fallback.img
-options root=$(blkid -o export /dev/sda4 | grep '^UUID=') rw\\
+options root=$(blkid -o export /dev/sda3 | grep '^UUID=') rw\\
 \" | tee /boot/loader/entries/arch-fallback.conf\
 ";;
 
@@ -314,6 +316,7 @@ homectl create UserName --member-of=seat,wheel\
       echo -e "${CLR_WHITE}\
 112: Edit sudoers.
        Here is an example:
+       Default insults
        ${CLR_RED}- # %wheel ALL=(ALL:ALL) ALL
        ${CLR_GREEN}+ %wheel ALL=(ALL:ALL) ALL\
 ${CLR_RESET}"
