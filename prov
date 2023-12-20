@@ -11,7 +11,8 @@ CLR_WHITE="\033[31;1;37m"
 CLR_RESET="\033[0m"
 
 CHAPTER=${1:-000}
-EDITOR=${EDITOR:-nano}
+EDITOR=${EDITOR:-vim}
+# EDITOR=${EDITOR:-nano}
 
 main() {
   while true; do
@@ -21,7 +22,7 @@ main() {
     echo
     case $answer in
       y) execute_yes;;
-      n) execute_no;;
+      n) ;;
       q) execute_quit;;
       e) execute_edit;;
       *) execute_help;;
@@ -39,10 +40,9 @@ execute_yes() {
   eval "$(printf "$CODE")"
 }
 
-execute_no() {
-  # Do something.
-  echo No.
-}
+# execute_no() {
+#   # Do something
+# }
 
 execute_quit() {
   echo -e "${CLR_WHITE}You were at the chapter $CHAPTER.\nBye for now!${CLR_RESET}"
@@ -50,11 +50,12 @@ execute_quit() {
 }
 
 execute_edit() {
-  local tmppath=$(dirname $0)/prov-tmp.sh
-  echo -e "EDIT. CHAPTER: $CHAPTER"
+  local tmppath=$(mktemp)
   echo -e "$CODE" | tee $tmppath
-  vim $tmppath
-  cat $tmppath | sed "s/^/\$ /"
+  $EDITOR $tmppath
+  echo -en "$CLR_CYAN"
+  cat $tmppath | sed -e "s/^/\$ /"
+  echo -en "$CLR_RESET"
   bash $tmppath
   rm $tmppath
 }
@@ -74,7 +75,7 @@ increment_chapter() {
 }
 
 show_code() {
-  echo -e "$CLR_CYAN$(echo -e "$CODE" | sed "s/^/\$ /")$CLR_RESET"
+  echo -e "${CLR_CYAN}$(echo -e "$CODE" | sed "s/^/\$ /")${CLR_RESET}"
 }
 
 instruction() {
@@ -83,55 +84,55 @@ instruction() {
   case $CHAPTER in
     000)
       echo -e "${CLR_WHITE}\
-# 000: Hi, there! Welcome to Arch Linux.
-#      You can pause and resume this programme anytime you like.
-#      The indices are required as arguments when you try to resume.
-#      e.g. ${CLR_GREEN}$ prov 000
-${CLR_WHITE}#
-#      In the following steps, your device name is assumed to be /dev/sda.
-#      So here goes!
-#      Press '${CLR_PURPLE}y${CLR_WHITE}'.\
+000: Hi, there! Welcome to Arch Linux.
+     You can pause and resume this programme anytime you like.
+     The indices are required as arguments when you try to resume.
+     e.g. ${CLR_GREEN}$ bash $0 000
+
+${CLR_WHITE}     In the following steps, your device name is assumed to be /dev/sda.
+     So here goes!
+     Press '${CLR_PURPLE}y${CLR_WHITE}'.\
 ${CLR_RESET}";;
 
     001)
       echo -e "${CLR_WHITE}\
-# 001: Running this programme in chroot?\
+001: Running this programme in chroot?\
 ${CLR_RESET}";;
 
     002)
       echo -e "${CLR_WHITE}\
-# 002: Backup the current partition table.
-#      When you want to restore it, execute below:
-#        ${CLR_GREEN}$ sfdisk /dev/sda < sda.dump\
+002: Backup the current partition table.
+     When you want to restore it, execute below:
+       ${CLR_GREEN}$ sfdisk /dev/sda < sda.dump\
 ${CLR_RESET}"
       CODE="sfdisk -d /dev/sda > sda.dump";;
 
     003)
       echo -e "${CLR_WHITE}\
-# 003: Check the current device.\
+003: Check the current device.\
 ${CLR_RESET}"
       lsblk -f;;
 
     004)
       echo -e "${CLR_WHITE}\
-# 004: Create partitions and mount them if you need to do.
-#      Here is the example of a table.
-#        ${CLR_GREEN}/mnt/boot    /dev/sda1    EFI system partition(EF00) 512MiB${CLR_WHITE}
-#        ${CLR_GREEN}swap         /dev/sda2    Linux swap(8200)           8GiB${CLR_WHITE}
-#        ${CLR_GREEN}/mnt/storage /dev/sda3    Linux filesystem(8300)     1TiB${CLR_WHITE}
-#        ${CLR_GREEN}/mnt         /dev/sda4    Linux x86-64 root(8304)    Remainder\
+004: Create partitions and mount them if you need to do.
+     Here is the example of a table.
+       ${CLR_GREEN}/mnt/boot    /dev/sda1    EFI system partition(EF00) 512MiB${CLR_WHITE}
+       ${CLR_GREEN}swap         /dev/sda2    Linux swap(8200)           8GiB${CLR_WHITE}
+       ${CLR_GREEN}/mnt/storage /dev/sda3    Linux filesystem(8300)     1TiB${CLR_WHITE}
+       ${CLR_GREEN}/mnt         /dev/sda4    Linux x86-64 root(8304)    Remainder\
 ${CLR_RESET}"
       CODE="gdisk /dev/sda";;
 
     005)
       echo -e "${CLR_WHITE}\
-# 005: Check the current device, again.\
+005: Check the current device, again.\
 ${CLR_RESET}"
       lsblk -f;;
 
     006)
       echo -e "${CLR_WHITE}\
-# 006: Format each partition and make swap.\
+006: Format each partition and make swap.\
 ${CLR_RESET}"
       CODE="\
 mkfs.fat -F 32 /dev/sda1\nmkswap /dev/sda2
@@ -140,7 +141,7 @@ mkfs.ext4 /dev/sda3\nmkfs.ext4 /dev/sda4\
 
     007)
       echo -e "${CLR_WHITE}\
-# 007: Mount each partition.\
+007: Mount each partition.\
 ${CLR_RESET}"
       CODE="\
 mount /dev/sda4 /mnt
@@ -151,22 +152,22 @@ swapon /dev/sda2\
 
     008)
       echo -e "${CLR_WHITE}\
-# 008: Check the time in your system.\
+008: Check the time in your system.\
 ${CLR_RESET}"
       timedatectl status;;
 
     009)
       echo -e "${CLR_WHITE}\
-# 009: Sort the servers from where you download packages.\
+009: Sort the servers from where you download packages.\
 ${CLR_RESET}"
       CODE="\
 cp /etc/pacman.d/mirrorlist{,.bak}
-reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
+reflector --latest 20 --sort rate --save /etc/pacman.d/mirrorlist
 ";;
 
     010)
       echo -e "${CLR_WHITE}\
-# 010: Refresh the key ring of pacman.\
+010: Refresh the key ring of pacman.\
 ${CLR_RESET}"
       CODE="\
 pacman-key --init
@@ -175,13 +176,13 @@ pacman-key --refresh\
 
     011)
       echo -e "${CLR_WHITE}\
-# 011: Install essential packages.\
+011: Install essential packages.\
 ${CLR_RESET}"
       CODE="pacstrap -K /mnt base linux linux-firmware iwd dhcpcd";;
 
     012)
       echo -e "${CLR_WHITE}\
-# 012: Create fstab, and then check it.\
+012: Create fstab, and then check it.\
 ${CLR_RESET}"
       CODE="\
 genfstab -U /mnt >> /mnt/etc/fstab
@@ -190,24 +191,24 @@ cat /mnt/etc/fstab\
 
     013)
       echo -e "${CLR_WHITE}\
-# 013: Move this file under /mnt, and then execute chroot.\
+013: Move this file under /mnt, and then execute chroot.\
 ${CLR_RESET}"
       CODE="\
-mv -i prov /mnt
+mv -i $0 /mnt
 arch-chroot /mnt\
 ";;
 
     014)
       echo -e "${CLR_WHITE}\
-# 014: You have reached the last step for those who have not executed chroot yet.
-       Run this programme once again, after chroot.
-       See you later!\
+014: You have reached the last step for those who have not executed chroot yet.
+     Run this programme once again, after chroot.
+     See you later!\
 ${CLR_RESET}"
       exit;;
 
     101)
       echo -e "${CLR_WHITE}\
-# 101: Welcome back! Let's go!
+101: Welcome back! Let's go!
 
        Install packages you need.\
 ${CLR_RESET}"
@@ -218,19 +219,19 @@ pacman -S base-devel git intel-ucode sudo vim-minimal\
 
     102)
       echo -e "${CLR_WHITE}\
-# 102: Set the time zone to Asia/Tokyo.\
+102: Set the time zone to Asia/Tokyo.\
 ${CLR_RESET}"
       CODE="ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime";;
 
     103)
       echo -e "${CLR_WHITE}\
-# 103: Set the system clock to the hardware one.\
+103: Set the system clock to the hardware one.\
 ${CLR_RESET}"
       CODE="hwclock --systohc";;
 
     104)
       echo -e "${CLR_WHITE}\
-# 104: Create the locale.\
+104: Create the locale.\
 ${CLR_RESET}"
       CODE="\
 echo 'en_US.UTF-8 UTF-8' | tee -a /etc/locale.gen
@@ -240,25 +241,25 @@ locale-gen\
 
     105)
       echo -e "${CLR_WHITE}\
-# 105: Set the host name. ${CLR_RED}It is recommended to press 'e'.\
+105: Set the host name. ${CLR_RED}It is recommended to press 'e'.\
 ${CLR_RESET}"
       CODE="echo 'MyHostName' > /etc/hostname";;
 
     106)
       echo -e "${CLR_WHITE}\
-# 106: Set the password for root.\
+106: Set the password for root.\
 ${CLR_RESET}"
       CODE="passwd";;
 
     107)
       echo -e "${CLR_WHITE}\
-# 107: Install the EFI boot manager.\
+107: Install the EFI boot manager.\
 ${CLR_RESET}"
       CODE="bootctl install";;
 
     108)
       echo -e "${CLR_WHITE}\
-# 108: Make the loader configuration file.\
+108: Make the loader configuration file.\
 ${CLR_RESET}"
       CODE="\
 echo -e \"\\
@@ -271,7 +272,7 @@ editor   no\\
 
     109)
       echo -e "${CLR_WHITE}\
-# 109: Add a loader file, after checking /boot.
+109: Add a loader file, after checking /boot.
        ${CLR_GREEN}$ ls -al /boot\
 ${CLR_RESET}"
        ls -al /boot
@@ -287,7 +288,7 @@ options root=$(blkid -o export /dev/sda4 | grep '^UUID=') rw\\
 
     110)
       echo -e "${CLR_WHITE}\
-# 110: Add another file, after checking /boot again.
+110: Add another file, after checking /boot again.
        ${CLR_GREEN}$ ls -al /boot\
 ${CLR_RESET}"
       CODE="\
@@ -302,7 +303,7 @@ options root=$(blkid -o export /dev/sda4 | grep '^UUID=') rw\\
 
     111)
       echo -e "${CLR_WHITE}\
-# 111: Create a user. ${CLR_RED}It is recommended to press 'e'.\
+111: Create a user. ${CLR_RED}It is recommended to press 'e'.\
 ${CLR_RESET}"
       CODE="\
 ln -s /usr/lib/systemd/system/systemd-homed.service /etc/systemd/system/dbus-org.freedesktop.home1.service
@@ -311,7 +312,7 @@ homectl create UserName --member-of=seat,wheel\
 
     112)
       echo -e "${CLR_WHITE}\
-# 112: Edit sudoers.
+112: Edit sudoers.
        Here is an example:
        ${CLR_RED}- # %wheel ALL=(ALL:ALL) ALL
        ${CLR_GREEN}+ %wheel ALL=(ALL:ALL) ALL\
